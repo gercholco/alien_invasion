@@ -67,7 +67,7 @@ def fire_bullet(ai_settings, screen, ship, bullets):
             new_bullet = Bullet(ai_settings, screen, ship)
             bullets.add(new_bullet)
 
-def update_bullets(ai_settings, screen, ship, aliens, bullets):
+def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets):
     """update position of bullets and get rid of old bullets"""
     #update bullet position
     bullets.update()
@@ -77,14 +77,19 @@ def update_bullets(ai_settings, screen, ship, aliens, bullets):
             if bullet.rect.bottom <= 0:
                 bullets.remove(bullet)
 
-    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+    check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets)
 
-def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
+def check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets):
     """respond to alien-bullet collisions"""
     #remove any bullets and aliens that have colided
     #check for any bullets that have hit aliens
     #if so, get rid of the bullet and the alien
     collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+
+    if collisions:
+        for aliens in collisions.values():
+            stats.score += ai_settings.alien_points * len(aliens)
+            sb.prep_score()
 
     if len(aliens) == 0:
         #destroy existing bullets, speed up the game and create new fleet.
@@ -93,7 +98,7 @@ def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
         create_fleet(ai_settings, screen, ship, aliens)
     
 
-def update_screen(ai_settings, screen, stats, ship, aliens, bullets, play_button):
+def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, play_button):
     """Update images on the screen and flip to the new screen"""
     #Redraw the screen during each pass throught the loop
     screen.fill(ai_settings.bg_color)
@@ -102,6 +107,8 @@ def update_screen(ai_settings, screen, stats, ship, aliens, bullets, play_button
         bullet.draw_bullet()
     ship.blitme()
     aliens.draw(screen)
+    #Draw the score information
+    sb.show_score()
 
     # draw the play button if the game is inactive
     if not stats.game_active:
